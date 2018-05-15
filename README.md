@@ -1,123 +1,94 @@
-# Fluent::Plugin::Papertrail
+# Fluent::Plugin::LogglySyslog
 
-[![Gem Version](https://badge.fury.io/rb/fluent-plugin-papertrail.svg)](https://badge.fury.io/rb/fluent-plugin-papertrail) [![Docker Repository on Quay](https://quay.io/repository/solarwinds/fluentd-kubernetes/status "Docker Repository on Quay")](https://quay.io/repository/solarwinds/fluentd-kubernetes) [![CircleCI](https://circleci.com/gh/solarwinds/fluent-plugin-papertrail/tree/master.svg?style=shield)](https://circleci.com/gh/solarwinds/fluent-plugin-papertrail/tree/master)
+[![Gem Version](https://badge.fury.io/rb/fluent-plugin-loggly-syslog.svg)](https://badge.fury.io/rb/fluent-plugin-loggly-syslog) [![CircleCI](https://circleci.com/gh/solarwinds/fluent-plugin-loggly-syslog/tree/master.svg?style=shield)](https://circleci.com/gh/solarwinds/fluent-plugin-loggly-syslog/tree/master)
 
 ## Description
 
-This repository contains the Fluentd Papertrail Output Plugin and the Docker and Kubernetes assets for deploying that combined Fluentd, Papertrail, Kubernetes log aggregation toolset to your cluster.
+This repository contains the Fluentd Loggly Syslog Output Plugin.
 
 ## Installation
 
 Install this gem when setting up fluentd:
 ```ruby
-gem install fluent-plugin-papertrail
+gem install fluent-plugin-loggly-syslog
 ```
 
 ## Usage
 
 ### Setup
 
-This plugin connects to Papertrail log destinations over TCP+TLS. This connection method should be enabled by default in standard Papertrail accounts, see:
+This is a buffered output plugin for Fluentd that's configured to send logs to Loggly using the [syslog endpoint](https://www.loggly.com/docs/streaming-syslog-without-using-files/).
+
+Each log line will arrive in Loggly with 2 payloads, the json representation of the fluent record and the data from the syslog wrapper.
+
+Data from the syslog wrapper includes:
 ```
-papertrailapp.com > Settings > Log Destinations
+appName - this defaults to the fluent tag
+hostname - this can be optionally configured as loggly_hostname (see below)
+timestamp - this defaults to the timestamp associated with the record and falls back to the current time at the time it reaches the plugin
 ```
+
+You're also able to (optionally) tag loggly records with any string you want, see `loggly_tag` below. 
 
 To configure this in fluentd:
 ```xml
 <match whatever.*>
-  type papertrail
-  papertrail_host <your papertrail hostname>
-  papertrail_port <your papertrail port>
+  @type loggly_syslog
+  loggly_token <your_loggly_token>
+  loggly_tag <your_loggly_tag>
+  loggly_hostname "#{ENV['HOST']}"
 </match>
 ```
 
-### Configuring a record_transformer
-
-This plugin expects the following fields to be set for each Fluent record:
-```
-    message   The log
-    program   The program/tag
-    severity  A valid syslog severity label
-    facility  A valid syslog facility label
-    hostname  The source hostname for papertrail logging
-```
-
-The following example is a `record_transformer` filter, from the [Kubernetes assets](docker/conf/kubernetes.conf) in this repo, that is used along with the [fluent-plugin-kubernetes_metadata_filter](https://github.com/fabric8io/fluent-plugin-kubernetes_metadata_filter) to populate the required fields for our plugin:
-```yaml
-<filter kubernetes.**>
-  type kubernetes_metadata
-</filter>
-
-<filter kubernetes.**>
-  type record_transformer
-  enable_ruby true
-  <record>
-    hostname ${record["kubernetes"]["namespace_name"]}-${record["kubernetes"]["pod_name"]}
-    program ${record["kubernetes"]["container_name"]}
-    severity info
-    facility local0
-    message ${record['log']}
-  </record>
-</filter>
-```
-
-If you don't set `hostname` and `program` values in your record, they will default to the environment variable `FLUENT_HOSTNAME` or `'unidentified'` and the fluent tag, respectively.
 
 ### Advanced Configuration
 This plugin inherits a few useful config parameters from Fluent's `BufferedOutput` class.
 
-Parameters for flushing the buffer, based on size and time, are `buffer_chunk_limit` and `flush_interval`, respectively. This plugin overrides the inherited default `flush_interval` to `1`, causing the fluent buffer to flush to Papertrail every second. 
+Parameters for flushing the buffer, based on size and time, are `buffer_chunk_limit` and `flush_interval`, respectively. This plugin overrides the inherited default `flush_interval` to `1`, causing the fluent buffer to flush to Loggly every second. 
 
-If the plugin fails to write to Papertrail for any reason, the log message will be put back in Fluent's buffer and retried. Retrying can be tuned and inherits a default configuration where `retry_wait` is set to `1` second and `retry_limit` is set to `17` attempts.
+If the plugin fails to write to Loggly for any reason, the log message will be put back in Fluent's buffer and retried. Retrying can be tuned and inherits a default configuration where `retry_wait` is set to `1` second and `retry_limit` is set to `17` attempts.
 
-If you want to change any of these parameters simply add them to a match stanza. For example, to flush the buffer every 60 seconds and stop retrying after 2 attempts, set something like:
+If you want to change any of these parameters simply add them to the match stanza. For example, to flush the buffer every 60 seconds and stop retrying after 2 attempts, set something like:
 ```xml
 <match whatever.*>
-  type papertrail
-  papertrail_host <your papertrail hostname>
-  papertrail_port <your papertrail port>
+  @type loggly_syslog
+  loggly_token <your_loggly_token>
   flush_interval 60
   retry_limit 2
 </match>
 ```
 
-## Kubernetes
+BufferedOutput also allows you to keep the buffer stored on disk, where it can persist through process restarts. This is great for avoiding dropping logs during outages, see:
 
-This repo includes a Kubernetes DaemonSet and accompanying Docker container which will stream all of your Kubernetes logs, containers and services, to Papertrail.
-
-To deploy this plugin as a DaemonSet to your Kubernetes cluster, just adjust the `FLUENT_*` environment variables in `kubernetes/fluentd-daemonset-papertrail.yaml` and push it to your cluster with:
-
-```
-kubectl apply -f kubernetes/fluentd-daemonset-papertrail.yaml
-```
-
-The Dockerfile that generates [the image used in this DaemonSet](https://quay.io/repository/solarwinds/fluentd-kubernetes), can be found at `docker/Dockerfile`.
-
-### Annotations
-
-You can redirect logs to alternate Papertrail destinations by adding annotations to your Pods or Namespaces:
-
-```
-solarwinds.io/papertrail_host: 'logs0.papertrailapp.com'
-solarwinds.io/papertrail_port: '12345'
-```
-
-If both the Pod and Namespace have annotations for any running Pod, the Pod's annotation is used.
-
-### Audit Logs
-
-If you'd like to redirect Kubernetes API Server Audit logs to a seperate Papertrail destination, add the following to your `fluent.conf`:
-```
-<match kube-apiserver-audit>
-    type papertrail
-    num_threads 4
-
-    papertrail_host "#{ENV['FLUENT_PAPERTRAIL_AUDIT_HOST']}"
-    papertrail_port "#{ENV['FLUENT_PAPERTRAIL_AUDIT_PORT']}"
+```xml
+<match whatever.*>
+  @type loggly_syslog
+  loggly_token <your_loggly_token>
+  buffer_type file
+  buffer_path /var/log/fluentd-buffer
 </match>
 ```
 
-This requires you to configure an [audit policy file](https://kubernetes.io/docs/tasks/debug-application-cluster/audit/) on your cluster.
+### Annotations
+
+If you're running on Kubernetes you can use annotations to redirect logs to alternate Loggly accounts.
+
+Simply enable the fluent-plugin-kubernetes_metadata_filter gem in your Fluentd setup and configure it to match annotations:
+
+```
+<filter kubernetes.**>
+  type kubernetes_metadata
+  annotation_match ["solarwinds.io/*"]
+</filter>
+```
+
+Then add the following annotation to each namespace or pod that you'd like to redirect logs for:
+
+```
+solarwinds.io/loggly_token: 'https://logs-01.loggly.com/inputs/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx'
+```
+
+If both a pod and the namespace it's in have this annotation, the pod's annotation takes precedence.
 
 ## Development
 
@@ -131,18 +102,14 @@ We have a [Makefile](Makefile) to wrap common functions and make life easier.
 ### Test
 `make test`
 
-### Release in [RubyGems](https://rubygems.org/gems/fluent-plugin-papertrail)
-To release a new version, update the version number in the [GemSpec](fluent-plugin-papertrail.gemspec) and then, run:
+### Release in [RubyGems](https://rubygems.org/gems/fluent-plugin-loggly-syslog)
+To release a new version, update the version number in the [GemSpec](fluent-plugin-loggly-syslog.gemspec) and then, run:
 
 `make release`
 
-### Release in [Quay.io](https://quay.io/repository/solarwinds/fluentd-kubernetes)
-
-`make release-docker TAG=$(VERSION)`
-
 ## Contributing
 
-Bug reports and pull requests are welcome on GitHub at: https://github.com/solarwinds/fluent-plugin-papertrail
+Bug reports and pull requests are welcome on GitHub at: https://github.com/solarwinds/fluent-plugin-loggly-syslog
 
 ## License
 
@@ -150,4 +117,4 @@ The gem is available as open source under the terms of the [Apache License](LICE
 
 # Questions/Comments?
 
-Please [open an issue](https://github.com/solarwinds/fluent-plugin-papertrail/issues/new), we'd love to hear from you. As a SolarWinds Innovation Project, this adapter is supported in a best-effort fashion.
+Please [open an issue](https://github.com/solarwinds/fluent-plugin-loggly-syslog/issues/new), we'd love to hear from you. As a SolarWinds Innovation Project, this adapter is supported in a best-effort fashion.
