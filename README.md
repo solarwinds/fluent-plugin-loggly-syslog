@@ -19,7 +19,7 @@ gem install fluent-plugin-loggly-syslog
 
 This is a buffered output plugin for Fluentd that's configured to send logs to Loggly using the [syslog endpoint](https://www.loggly.com/docs/streaming-syslog-without-using-files/).
 
-Each log line will arrive in Loggly with 2 payloads, the json representation of the fluent record and the data from the syslog wrapper.
+Each log line will arrive in Loggly with 2 payloads: the json representation of the fluent record and the data from the syslog wrapper.
 
 Data from the syslog wrapper includes:
 ```
@@ -85,7 +85,7 @@ Simply enable the fluent-plugin-kubernetes_metadata_filter gem in your Fluentd s
 Then add the following annotation to each namespace or pod that you'd like to redirect logs for:
 
 ```
-solarwinds.io/loggly_token: 'https://logs-01.loggly.com/inputs/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx'
+solarwinds.io/loggly_token: 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx'
 ```
 
 If both a pod and the namespace it's in have this annotation, the pod's annotation takes precedence.

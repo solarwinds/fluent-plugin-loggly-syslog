@@ -85,18 +85,18 @@ module Fluent
       #     [xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx@41058 tag="syslog"] \
       #     message'
 
-      pri = 134                                             # 134 is hardcoded facility local0 and severity info
-      version = 1                                           # Syslog Protocol v1
-      record_time = time ? Time.at(time) : Time.now
-      timestamp = record_time.to_datetime.rfc3339
-      hostname = @loggly_hostname || '-'
-      app_name = tag || '-'
-      procid = '-'                                          # set procid and msgid to NILVALUE
-      msgid = '-'
-      pen = 41058                                           # Loggly's Private Enterprise Number is 41058
-      tag = @loggly_tag ? " tag=\"#{@loggly_tag}\"" : ''    # write tag only if passed in through config
+      pri             = 134                                          # 134 is hardcoded facility local0 and severity info
+      version         = 1                                            # Syslog Protocol v1
+      record_time     = time ? Time.at(time) : Time.now
+      timestamp       = record_time.to_datetime.rfc3339
+      hostname        = @loggly_hostname || '-'
+      app_name        = tag || '-'
+      procid          = '-'                                          # set procid and msgid to NILVALUE
+      msgid           = '-'
+      pen             = 41058                                        # Loggly's Private Enterprise Number is 41058
+      tag             = @loggly_tag ? " tag=\"#{@loggly_tag}\"" : '' # write tag only if passed in through config
       structured_data = "[#{token}@#{pen}#{tag}]"
-      msg = record.to_json
+      msg             = record.to_json
 
       "<#{pri}>#{version} #{timestamp} #{hostname} #{app_name} #{procid} #{msgid} #{structured_data} #{msg}"
     end
