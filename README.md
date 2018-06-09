@@ -1,6 +1,6 @@
 # Fluent::Plugin::LogglySyslog
 
-[![Gem Version](https://badge.fury.io/rb/fluent-plugin-loggly-syslog.svg)](https://badge.fury.io/rb/fluent-plugin-loggly-syslog) [![CircleCI](https://circleci.com/gh/solarwinds/fluent-plugin-loggly-syslog/tree/master.svg?style=shield)](https://circleci.com/gh/solarwinds/fluent-plugin-loggly-syslog/tree/master)
+[![Gem Version](https://badge.fury.io/rb/fluent-plugin-loggly-syslog.svg)](https://badge.fury.io/rb/fluent-plugin-loggly-syslog)
 
 ## Description
 
