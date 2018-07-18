@@ -12,11 +12,15 @@ module Fluent
     config_param :loggly_hostname, :string, default: nil
     config_param :loggly_host, :string, default: 'logs-01.loggly.com'
     config_param :loggly_port, :integer, default: 6514
+    config_param :discard_unannotated_pod_logs, :bool, default: false
     # overriding default flush_interval (60 sec) from Fluent::BufferedOutput
     config_param :flush_interval, :time, default: 1
 
     # register as 'loggly_syslog' fluent plugin
     Fluent::Plugin.register_output('loggly_syslog', self)
+
+    # declare const string for nullifying token if we decide to discard records
+    DISCARD_STRING = 'DISCARD'
 
     def configure(conf)
       super
@@ -41,8 +45,10 @@ module Fluent
     def write(chunk)
       chunk.msgpack_each { |(tag, time, record)|
         token = pick_token(record)
-        packet = create_packet(tag, time, record, token)
-        send_to_loggly(packet)
+        unless token.eql? DISCARD_STRING
+          packet = create_packet(tag, time, record, token)
+          send_to_loggly(packet)
+        end
       }
     end
 
@@ -70,6 +76,9 @@ module Fluent
         # else if kubernetes namespace has papertrail destination as annotation, use it
       elsif record.dig('kubernetes', 'namespace_annotations', 'solarwinds_io/loggly_token')
         token = record['kubernetes']['namespace_annotations']['solarwinds_io/loggly_token']
+        # else if it is a kubernetes log and we're discarding unannotated logs
+      elsif record.dig('kubernetes') && @discard_unannotated_pod_logs
+        token = DISCARD_STRING
         # else use pre-configured destination
       else
         token = @loggly_token
