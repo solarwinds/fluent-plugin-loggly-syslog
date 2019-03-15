@@ -37,9 +37,11 @@ To configure this in fluentd:
   loggly_token <your_loggly_token>
   loggly_tag <your_loggly_tag>
   loggly_hostname "#{ENV['HOST']}"
+  parse_json true
 </match>
 ```
 
+Also, if you set `parse_json` to true, as is shown in the example above, then the plugin will attempt to parse the `message` field from each fluentd record.
 
 ### Advanced Configuration
 This plugin inherits a few useful config parameters from Fluent's `BufferedOutput` class.

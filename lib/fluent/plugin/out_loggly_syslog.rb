@@ -13,6 +13,7 @@ module Fluent
     config_param :loggly_host, :string, default: 'logs-01.loggly.com'
     config_param :loggly_port, :integer, default: 6514
     config_param :discard_unannotated_pod_logs, :bool, default: false
+    config_param :parse_json, :bool, default: false
     # overriding default flush_interval (60 sec) from Fluent::BufferedOutput
     config_param :flush_interval, :time, default: 1
 
@@ -93,6 +94,14 @@ module Fluent
       #   '<134>1 2018-05-10T21:11:58-05:00 mysite.com myapp procid msgid \
       #     [xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx@41058 tag="syslog"] \
       #     message'
+
+      if @parse_json
+        begin
+          parsed_message = JSON.parse(record.message)
+          record.message = parsed_message
+        rescue JSON::ParserError
+        end
+      end
 
       pri             = 134                                          # 134 is hardcoded facility local0 and severity info
       version         = 1                                            # Syslog Protocol v1
