@@ -95,10 +95,11 @@ module Fluent
       #     [xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx@41058 tag="syslog"] \
       #     message'
 
-      if @parse_json
+      if @parse_json && record.dig('message')
         begin
-          parsed_message = JSON.parse(record.message)
-          record.message = parsed_message
+          parsed_message = JSON.parse(record['message'])
+          record['log'] = parsed_message
+          record.delete('message')
         rescue JSON::ParserError
         end
       end
