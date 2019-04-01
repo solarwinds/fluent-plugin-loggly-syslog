@@ -1,3 +1,5 @@
+require 'yajl'
+
 module Fluent
   class LogglySyslog < Fluent::BufferedOutput
     class SocketFailureError < StandardError; end
@@ -97,10 +99,11 @@ module Fluent
 
       if @parse_json && record.dig('message')
         begin
-          parsed_message = JSON.parse(record['message'])
+          parser = Yajl::Parser.new
+          parsed_message = parser.parse(record['message'])
           record['log'] = parsed_message
           record.delete('message')
-        rescue JSON::ParserError
+        rescue Yajl::ParseError
         end
       end
 
@@ -115,9 +118,9 @@ module Fluent
       pen             = 41058                                        # Loggly's Private Enterprise Number is 41058
       tag             = @loggly_tag ? " tag=\"#{@loggly_tag}\"" : '' # write tag only if passed in through config
       structured_data = "[#{token}@#{pen}#{tag}]"
-      msg             = record.to_json
+      msg             = Yajl.dump(record)
 
-      "<#{pri}>#{version} #{timestamp} #{hostname} #{app_name} #{procid} #{msgid} #{structured_data} #{msg}"
+      "<#{pri}>#{version} #{timestamp} #{hostname} #{app_name} #{procid} #{msgid} #{structured_data} #{msg}\n"
     end
 
     def send_to_loggly(packet)
@@ -129,7 +132,7 @@ module Fluent
       else
         begin
           # send it
-          @socket.puts packet
+          @socket.write packet
         rescue => e
           # socket failed, reset to nil to recreate for the next write
           @socket = nil
