@@ -4,12 +4,12 @@ $LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
 
 Gem::Specification.new do |spec|
   spec.name          = "fluent-plugin-loggly-syslog"
-  spec.version       = "0.0.5"
-  spec.authors       = ["Chris Rust"]
-  spec.email         = ["chris.rust@solarwinds.com"]
+  spec.version       = "0.1.0"
+  spec.authors       = ["Chris Rust", "Chris Erway"]
+  spec.email         = ["chris.rust@solarwinds.com", "chris.erway@solarwinds.com"]
 
-  spec.summary       = %q{Syslog output Fluentd plugin for Loggly}
-  spec.description   = %q{Syslog output Fluentd plugin for Loggly}
+  spec.summary       = %q{Fluentd output plugin for Loggly}
+  spec.description   = %q{Fluentd syslog output plugin for Loggly}
   spec.homepage      = "https://github.com/solarwinds/fluent-plugin-loggly-syslog"
   spec.license       = "Apache-2.0"
 

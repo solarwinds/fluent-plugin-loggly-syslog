@@ -1,10 +1,10 @@
 # Fluent::Plugin::LogglySyslog
 
-[![Gem Version](https://badge.fury.io/rb/fluent-plugin-loggly-syslog.svg)](https://badge.fury.io/rb/fluent-plugin-loggly-syslog)
+[![Gem Version](https://badge.fury.io/rb/fluent-plugin-loggly-syslog.svg)](https://badge.fury.io/rb/fluent-plugin-loggly-syslog) [![CircleCI](https://circleci.com/gh/solarwinds/fluent-plugin-loggly-syslog/tree/master.svg?style=shield)](https://circleci.com/gh/solarwinds/fluent-plugin-loggly-syslog/tree/master)
 
 ## Description
 
-This repository contains the Fluentd Loggly Syslog Output Plugin.
+This repository contains the Fluentd Loggly Output Plugin.
 
 ## Installation
 
@@ -119,4 +119,4 @@ The gem is available as open source under the terms of the [Apache License](LICE
 
 # Questions/Comments?
 
-Please [open an issue](https://github.com/solarwinds/fluent-plugin-loggly-syslog/issues/new), we'd love to hear from you. As a SolarWinds Innovation Project, this adapter is supported in a best-effort fashion.
+Please [open an issue](https://github.com/solarwinds/fluent-plugin-loggly-syslog/issues/new), we'd love to hear from you.
