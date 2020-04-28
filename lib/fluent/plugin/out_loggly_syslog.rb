@@ -108,7 +108,7 @@ module Fluent
         end
       end
 
-      pri             = @loggly_pri                                  # 134 is hardcoded facility local0 and severity info
+      pri             = @loggly_pri                                  # syslog pri as parameter
       version         = 1                                            # Syslog Protocol v1
       record_time     = time ? Time.at(time) : Time.now
       timestamp       = record_time.to_datetime.rfc3339
