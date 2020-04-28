@@ -14,6 +14,7 @@ module Fluent
     config_param :loggly_hostname, :string, default: nil
     config_param :loggly_host, :string, default: 'logs-01.loggly.com'
     config_param :loggly_port, :integer, default: 6514
+    config_param :loggly_pri, :integer, default: 134
     config_param :discard_unannotated_pod_logs, :bool, default: false
     config_param :parse_json, :bool, default: false
     # overriding default flush_interval (60 sec) from Fluent::BufferedOutput
@@ -107,7 +108,7 @@ module Fluent
         end
       end
 
-      pri             = 134                                          # 134 is hardcoded facility local0 and severity info
+      pri             = @loggly_pri                                  # 134 is hardcoded facility local0 and severity info
       version         = 1                                            # Syslog Protocol v1
       record_time     = time ? Time.at(time) : Time.now
       timestamp       = record_time.to_datetime.rfc3339
