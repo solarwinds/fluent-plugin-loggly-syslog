@@ -6,6 +6,22 @@
 
 This repository contains the Fluentd Loggly Output Plugin.
 
+### Looking for Fluent-bit? 
+
+If you are interested in using [fluent-bit](https://fluentbit.io/) with Loggly instead, the fluent-bit built-in [HTTP output plugin](https://docs.fluentbit.io/manual/v/1.0/output/http) supports Loggly's HTTP/S bulk endpoint natively (using the `json_lines` format, `timestamp` for `json_date_key`, and `iso8601` for `json_date_format`). You can see a fluent-bit configuration example in the [AWS Firelens Examples repo](https://github.com/aws-samples/amazon-ecs-firelens-examples/tree/mainline/examples/fluent-bit/solarwinds-loggly) or in the following example:
+
+    [OUTPUT]
+        Name             http
+        Match            *
+        Host             logs-01.loggly.com
+        Port             443
+        Tls              On
+        URI              /bulk/${LOGGLY_TOKEN}/tag/${LOGGLY_TAG}/
+        Format           json_lines
+        Json_Date_Key    timestamp
+        Json_Date_Format iso8601
+        Retry_Limit      False
+
 ## Installation
 
 Install this gem when setting up fluentd:
